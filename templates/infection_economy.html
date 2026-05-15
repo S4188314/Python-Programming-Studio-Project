@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}VaxTrack | Infection by Economy{% endblock %}
+
+{% block content %}
+  <!-- PAGE HEADER -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('landing.index') }}">Home</a>
+    <span>Infection by Economy</span>
+  </nav>
+  <section class="page-intro">
+    <p class="eyebrow">Level 2 shallow glance</p>
+    <h1>Infection Data by Economic Status</h1>
+    <p>Compare disease cases per 100,000 people across economic phases for a selected year.</p>
+  </section>
+
+  <!-- HELP PANEL -->
+  <details class="help-box">
+    <summary class="help-trigger">How to use this page</summary>
+    <div class="help-content">
+      <p>Select an economic status, infection type, and year. Choose a country-level or summary view, then apply filters to refresh the table.</p>
+    </div>
+  </details>
+
+  <!-- FILTER PANEL -->
+  <section class="filter-panel">
+    <form class="filter-form" method="GET" action="{{ url_for('infection.infection_by_economy') }}">
+      <div class="form-field">
+        <label for="status">Economic Status</label>
+        <select id="status" name="status" required>
+          <option value="">Select status</option>
+          {% for economy in economies %}
+            <option value="{{ economy }}" {{ "selected" if selected.status == economy }}>{{ economy }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="disease">Infection Type</label>
+        <select id="disease" name="disease" required>
+          <option value="">Select infection</option>
+          {% for disease in diseases %}
+            <option value="{{ disease.code }}" {{ "selected" if selected.disease == disease.code }}>{{ disease.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="year">Year</label>
+        <select id="year" name="year" required>
+          <option value="">Select year</option>
+          {% for year in years %}
+            <option value="{{ year }}" {{ "selected" if selected.year == year | string }}>{{ year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <fieldset class="radio-group">
+        <legend>View</legend>
+        <label><input type="radio" name="view" value="country" {{ "checked" if selected.view == "country" }}> By Country</label>
+        <label><input type="radio" name="view" value="summary" {{ "checked" if selected.view == "summary" }}> Summarised by Economic Phase</label>
+      </fieldset>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Apply</button>
+        <a class="btn btn-reset" href="{{ reset_url }}">Reset Filters</a>
+      </div>
+    </form>
+
+    {% if active_filters %}
+      <div class="active-filters">
+        <span class="filter-label">Active Filters:</span>
+        {% for key, value in active_filters.items() %}
+          <span class="chip">{{ key }}: {{ value }}</span>
+        {% endfor %}
+        <a href="{{ reset_url }}" class="chip chip-reset">Clear all</a>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- ANOMALY NOTICE -->
+  {% if anomaly_count %}
+    <div class="notice-banner">
+      Some infection or population records had missing or inconsistent values and were excluded from per-100,000 calculations.
+    </div>
+  {% endif %}
+
+  <!-- SUMMARY CARDS -->
+  <section class="summary-grid">
+    {% for card in summary_cards %}
+      <article class="summary-card">
+        <strong>{{ card.value }}</strong>
+        <span>{{ card.label }}</span>
+        <p>{{ card.note }}</p>
+      </article>
+    {% endfor %}
+  </section>
+
+  <!-- RESULTS SECTION -->
+  <section class="section-block">
+    <div class="section-heading">
+      <p class="eyebrow">Results</p>
+      <h2>{{ "By Country" if selected.view == "country" else "Summarised by Economic Phase" }}</h2>
+      <p class="results-status">Showing {{ results_count }} results.</p>
+    </div>
+
+    <div class="view-panel {{ 'is-active' if selected.view == 'country' }}">
+      {% if selected.status and selected.disease and selected.year and country_rows | length == 0 %}
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <h3>No country results found</h3>
+          <p>Try another economy, disease, or year.</p>
+          <a href="{{ reset_url }}" class="btn btn-reset">Reset Filters</a>
+        </div>
+      {% endif %}
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col"><a href="{{ sort_urls.disease }}">Disease <span class="sort-mark">{{ sort_marks.disease }}</span></a></th>
+              <th scope="col"><a href="{{ sort_urls.country }}">Country <span class="sort-mark">{{ sort_marks.country }}</span></a></th>
+              <th scope="col"><a href="{{ sort_urls.economic_phase }}">Economic Phase <span class="sort-mark">{{ sort_marks.economic_phase }}</span></a></th>
+              <th scope="col"><a href="{{ sort_urls.year }}">Year <span class="sort-mark">{{ sort_marks.year }}</span></a></th>
+              <th scope="col"><a href="{{ sort_urls.cases_per_100k }}">Cases per 100,000 <span class="sort-mark">{{ sort_marks.cases_per_100k }}</span></a></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in country_rows %}
+              <tr>
+                <td>{{ row.disease }}</td>
+                <th scope="row">{{ row.country }}</th>
+                <td>{{ row.economic_phase }}</td>
+                <td>{{ row.year }}</td>
+                <td class="{{ row.risk_class }}">{{ row.rate_display }} <span>{{ row.risk_label }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="view-panel {{ 'is-active' if selected.view == 'summary' }}">
+      {% if selected.status and selected.disease and selected.year and summary_rows | length == 0 %}
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <h3>No summary results found</h3>
+          <p>Try another economy, disease, or year.</p>
+          <a href="{{ reset_url }}" class="btn btn-reset">Reset Filters</a>
+        </div>
+      {% endif %}
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col"><a href="{{ sort_urls.disease }}">Disease <span class="sort-mark">{{ sort_marks.disease }}</span></a></th>
+              <th scope="col"><a href="{{ sort_urls.economic_phase }}">Economic Phase <span class="sort-mark">{{ sort_marks.economic_phase }}</span></a></th>
+              <th scope="col"><a href="{{ sort_urls.year }}">Year <span class="sort-mark">{{ sort_marks.year }}</span></a></th>
+              <th scope="col"><a href="{{ sort_urls.total_cases }}">Total Cases <span class="sort-mark">{{ sort_marks.total_cases }}</span></a></th>
+              <th scope="col">Countries</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in summary_rows %}
+              <tr>
+                <td>{{ row.disease }}</td>
+                <th scope="row">{{ row.economic_phase }}</th>
+                <td>{{ row.year }}</td>
+                <td>{{ row.total_cases_display }}</td>
+                <td>{{ row.countries_display }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+{% endblock %}

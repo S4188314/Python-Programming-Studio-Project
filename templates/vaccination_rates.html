@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}VaxTrack | Vaccination Rates{% endblock %}
+
+{% block content %}
+  <!-- PAGE HEADER -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('landing.index') }}">Home</a>
+    <span>Vaccination Rates</span>
+  </nav>
+  <section class="page-intro">
+    <p class="eyebrow">Level 2 shallow glance</p>
+    <h1>Vaccination Rates by Country and Region</h1>
+    <p>Filter by antigen, year, region, and country to find countries meeting the 90% vaccination-coverage threshold.</p>
+  </section>
+
+  <!-- HELP PANEL -->
+  <details class="help-box">
+    <summary class="help-trigger">How to use this page</summary>
+    <div class="help-content">
+      <p>Select an antigen and year, optionally choose a region or country, then apply filters. Header links sort the country table and download buttons export the current results as <abbr title="Comma-Separated Values">CSV</abbr>.</p>
+    </div>
+  </details>
+
+  <!-- FILTER PANEL -->
+  <section class="filter-panel">
+    <form class="filter-form" method="GET" action="{{ url_for('vax_rates.vaccination_rates') }}">
+      <div class="form-field">
+        <label for="antigen">Antigen</label>
+        <select id="antigen" name="antigen" required>
+          <option value="">Select antigen</option>
+          {% for antigen in antigens %}
+            <option value="{{ antigen.code }}" {{ "selected" if selected.antigen == antigen.code }}>{{ antigen.code }} - {{ antigen.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="year">Year</label>
+        <select id="year" name="year" required>
+          <option value="">Select year</option>
+          {% for year in years %}
+            <option value="{{ year }}" {{ "selected" if selected.year == year | string }}>{{ year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="region">Region</label>
+        <select id="region" name="region">
+          <option value="">All regions</option>
+          {% for region in regions %}
+            <option value="{{ region }}" {{ "selected" if selected.region == region }}>{{ region }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="country">Country</label>
+        <select id="country" name="country">
+          <option value="">All countries</option>
+          {% for country in countries %}
+            <option value="{{ country.code }}" {{ "selected" if selected.country == country.code }}>{{ country.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Apply Filters</button>
+        <a class="btn btn-reset" href="{{ reset_url }}">Reset Filters</a>
+      </div>
+    </form>
+
+    {% if active_filters %}
+      <div class="active-filters">
+        <span class="filter-label">Active Filters:</span>
+        {% for key, value in active_filters.items() %}
+          <span class="chip">{{ key }}: {{ value }}</span>
+        {% endfor %}
+        <a href="{{ reset_url }}" class="chip chip-reset">Clear all</a>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- ANOMALY NOTICE -->
+  {% if anomaly_count %}
+    <div class="notice-banner">
+      Some vaccination records contain blank numeric values. These records are excluded from percentage calculations to avoid misleading results.
+    </div>
+  {% endif %}
+
+  <!-- RESULTS SECTION -->
+  <section class="section-block">
+    <div class="section-heading">
+      <p class="eyebrow">Results</p>
+      <h2>Coverage tables</h2>
+      <p class="results-status">Showing {{ results_count }} results in the country table.</p>
+    </div>
+
+    <div class="tab-shell">
+      <input class="tab-input" type="radio" name="vax-tab" id="vax-tab-countries" checked>
+      <input class="tab-input" type="radio" name="vax-tab" id="vax-tab-regions">
+      <div class="tab-labels">
+        <label class="tab-label" for="vax-tab-countries">Countries meeting target</label>
+        <label class="tab-label" for="vax-tab-regions">Summary by region</label>
+      </div>
+      <div class="tab-panels">
+        <div class="tab-panel">
+          <div class="export-row">
+            {% if download_urls.countries %}
+              <a class="btn btn-secondary" href="{{ download_urls.countries }}">Download Country CSV</a>
+            {% endif %}
+          </div>
+          {% if selected.antigen and selected.year and table1 | length == 0 %}
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <h3>No results found</h3>
+              <p>Try a different antigen, year, country, or region.</p>
+              <a href="{{ reset_url }}" class="btn btn-reset">Reset Filters</a>
+            </div>
+          {% endif %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th scope="col"><a href="{{ sort_urls.antigen }}">Antigen <span class="sort-mark">{{ sort_marks.antigen }}</span></a></th>
+                  <th scope="col"><a href="{{ sort_urls.year }}">Year <span class="sort-mark">{{ sort_marks.year }}</span></a></th>
+                  <th scope="col"><a href="{{ sort_urls.country }}">Country <span class="sort-mark">{{ sort_marks.country }}</span></a></th>
+                  <th scope="col"><a href="{{ sort_urls.region }}">Region <span class="sort-mark">{{ sort_marks.region }}</span></a></th>
+                  <th scope="col"><a href="{{ sort_urls.pct_of_target }}">Vaccination Rate % <span class="sort-mark">{{ sort_marks.pct_of_target }}</span></a></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in table1 %}
+                  <tr>
+                    <td><abbr title="{{ row.antigen_name }}">{{ row.antigen }}</abbr></td>
+                    <td>{{ row.year }}</td>
+                    <th scope="row">{{ row.country }}</th>
+                    <td>{{ row.region }}</td>
+                    <td class="{{ row.target_class }}">{{ row.pct_display }}% <span>{{ row.target_status }}</span></td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="tab-panel">
+          <div class="export-row">
+            {% if download_urls.regions %}
+              <a class="btn btn-secondary" href="{{ download_urls.regions }}">Download Region CSV</a>
+            {% endif %}
+          </div>
+          {% if selected.antigen and selected.year and table2 | length == 0 %}
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <h3>No regional summary found</h3>
+              <p>No region met the threshold for the selected filters.</p>
+              <a href="{{ reset_url }}" class="btn btn-reset">Reset Filters</a>
+            </div>
+          {% endif %}
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Antigen</th>
+                  <th scope="col">Year</th>
+                  <th scope="col">Region</th>
+                  <th scope="col">Countries Meeting Target</th>
+                  <th scope="col">Average Vaccination Rate %</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in table2 %}
+                  <tr>
+                    <td><abbr title="{{ row.antigen_name }}">{{ row.antigen }}</abbr></td>
+                    <td>{{ row.year }}</td>
+                    <th scope="row">{{ row.region }}</th>
+                    <td>{{ row.countries_met_display }}</td>
+                    <td>{{ row.avg_coverage_display }}%</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

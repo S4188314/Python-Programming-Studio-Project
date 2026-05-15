@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}VaxTrack{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <!-- NAVIGATION -->
+  <nav class="navbar" aria-label="Primary navigation">
+    <a href="{{ url_for('landing.index') }}" class="nav-brand">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M15.5 3.5 20.5 8.5M18 6 10 14M8 12l4 4M6 14l4 4M4 20l4-4M13 5l6 6" />
+      </svg>
+      <span>VaxTrack</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="{{ url_for('landing.index') }}" class="nav-link {{ 'active' if active_page == 'home' }}">Home</a></li>
+      <li><a href="{{ url_for('mission.mission') }}" class="nav-link {{ 'active' if active_page == 'mission' }}">Mission</a></li>
+      <li><a href="{{ url_for('vax_rates.vaccination_rates') }}" class="nav-link {{ 'active' if active_page == 'vax_rates' }}">Vaccination Rates</a></li>
+      <li><a href="{{ url_for('infection.infection_by_economy') }}" class="nav-link {{ 'active' if active_page == 'infection' }}">Infection by Economy</a></li>
+      <li><a href="{{ url_for('improvement.vaccination_improvement') }}" class="nav-link {{ 'active' if active_page == 'improvement' }}">Improvements</a></li>
+      <li><a href="{{ url_for('above_avg.above_average_infection') }}" class="nav-link {{ 'active' if active_page == 'above_avg' }}">Above Average</a></li>
+    </ul>
+  </nav>
+
+  <!-- FLASH MESSAGES -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- PAGE CONTENT -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <p>Data sourced from the <abbr title="World Health Organization">WHO</abbr> Global Immunisation Database | COSC3107/3108 2025</p>
+  </footer>
+</body>
+</html>

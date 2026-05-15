@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}VaxTrack | Understanding Global Vaccination{% endblock %}
+
+{% block content %}
+  <!-- HERO SECTION -->
+  <section class="hero-section hero-map">
+    <div class="hero-content">
+      <p class="eyebrow">Preventable infectious diseases</p>
+      <h1>Understanding Global Vaccination</h1>
+      <p class="hero-copy">Explore how immunisation coverage, disease cases, and global context connect across countries from the <abbr title="World Health Organization">WHO</abbr> dataset.</p>
+      <div class="button-row">
+        <a href="{{ url_for('vax_rates.vaccination_rates') }}" class="btn btn-primary">Explore the Data</a>
+        <a href="{{ url_for('mission.mission') }}" class="btn btn-secondary">Read the Mission</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- HELP PANEL -->
+  <details class="help-box">
+    <summary class="help-trigger">How to use this page</summary>
+    <div class="help-content">
+      <p>Start with the data snapshot, choose a disease tag, then move into the filtered analysis pages for country, region, economy, or year-based questions.</p>
+    </div>
+  </details>
+
+  <!-- DATA SNAPSHOT -->
+  <section class="section-block">
+    <div class="section-heading">
+      <p class="eyebrow">Database snapshot</p>
+      <h2>Big picture facts</h2>
+    </div>
+    <div class="stat-grid">
+      <article class="stat-card">
+        <svg class="card-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="5" width="16" height="15" rx="2" />
+          <path d="M8 3v4M16 3v4M4 10h16" />
+        </svg>
+        <strong>{{ stats.timeframe }}</strong>
+        <span>Years covered</span>
+      </article>
+      <article class="stat-card">
+        <svg class="card-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m8 16 8-8M14 6l4 4M6 14l4 4M4 20l4-4" />
+        </svg>
+        <strong>{{ stats.total_doses }}</strong>
+        <span>Vaccines administered</span>
+      </article>
+      <article class="stat-card">
+        <svg class="card-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3v18M5 8h14M6 16h12M7 4l10 16M17 4 7 20" />
+        </svg>
+        <strong>{{ stats.total_cases }}</strong>
+        <span>Preventable disease cases</span>
+      </article>
+      <article class="stat-card">
+        <svg class="card-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="8" />
+          <path d="M8 12h8M12 8v8" />
+        </svg>
+        <strong>{{ stats.disease_count }}</strong>
+        <span>Diseases tracked across {{ stats.country_count }} countries</span>
+      </article>
+    </div>
+  </section>
+
+  <!-- DISEASE LIST PREVIEW -->
+  <section class="section-block">
+    <div class="section-heading">
+      <p class="eyebrow">Diseases covered</p>
+      <h2>Choose a disease to begin</h2>
+    </div>
+    <div class="tag-cloud" aria-label="Disease links">
+      {% for disease in diseases %}
+        <a class="tag" href="{{ url_for('infection.infection_by_economy', disease=disease.code) }}">
+          {{ disease.name }} <span>{{ disease.total_cases_display }} cases</span>
+        </a>
+      {% endfor %}
+    </div>
+    <p class="results-status">Showing {{ results_count }} disease tags.</p>
+  </section>
+
+  <!-- NAVIGATION TEASER -->
+  <section class="teaser-grid">
+    <a class="teaser-card" href="{{ url_for('vax_rates.vaccination_rates') }}">
+      <span class="teaser-kicker">Level 2</span>
+      <strong>Vaccination by Region</strong>
+      <p>Find countries that met the 90% coverage threshold for a selected antigen and year.</p>
+    </a>
+    <a class="teaser-card" href="{{ url_for('infection.infection_by_economy') }}">
+      <span class="teaser-kicker">Level 2</span>
+      <strong>Infection by Economy</strong>
+      <p>Compare cases per 100,000 people by economic phase, disease, and year.</p>
+    </a>
+    <a class="teaser-card" href="{{ url_for('above_avg.above_average_infection') }}">
+      <span class="teaser-kicker">Level 3</span>
+      <strong>Above Average Infection</strong>
+      <p>See which countries exceed the global infection-rate average for a disease.</p>
+    </a>
+  </section>
+{% endblock %}
