@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}VaxTrack | Mission{% endblock %}
+
+{% block content %}
+  <!-- MISSION HEADER -->
+  <section class="page-hero">
+    <div>
+      <p class="eyebrow">Level 1 big picture</p>
+      <h1>Our Mission</h1>
+      <p>VaxTrack helps students, researchers, and public-health decision makers examine preventable infectious diseases with clear, respectful, and evidence-based data views.</p>
+      <p>The site connects vaccination coverage, infection burden, economic context, and global averages so visitors can move from a broad overview into deeper analysis without needing specialist tools.</p>
+    </div>
+  </section>
+
+  <!-- HELP PANEL -->
+  <details class="help-box">
+    <summary class="help-trigger">How to use this page</summary>
+    <div class="help-content">
+      <p>Use this page to understand the purpose of the site, the people it supports, and the team responsible for the academic project.</p>
+    </div>
+  </details>
+
+  <!-- HOW TO USE THIS SITE -->
+  <section class="section-block">
+    <div class="section-heading">
+      <p class="eyebrow">Instruction</p>
+      <h2>How to use this site</h2>
+    </div>
+    <div class="step-grid">
+      <article class="step-card">
+        <span class="step-number">1</span>
+        <h3>Choose a topic</h3>
+        <p>Begin with a big-picture page, then select the vaccination or infection question you want to explore.</p>
+      </article>
+      <article class="step-card">
+        <span class="step-number">2</span>
+        <h3>Filter the data</h3>
+        <p>Use country, region, economy, disease, antigen, and year filters to narrow the dataset.</p>
+      </article>
+      <article class="step-card">
+        <span class="step-number">3</span>
+        <h3>Discover insights</h3>
+        <p>Compare results, sort tables, and use deep-dive pages to identify trends and outliers.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- PERSONAS SECTION -->
+  <section class="section-block">
+    <div class="section-heading">
+      <p class="eyebrow">Retrieved from database</p>
+      <h2>Personas</h2>
+    </div>
+    <div class="persona-grid">
+      {% for persona in personas %}
+        <article class="persona-card">
+          <svg class="avatar-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M5 21a7 7 0 0 1 14 0" />
+          </svg>
+          <div>
+            <h3>{{ persona.name }}</h3>
+            <p class="muted">{{ persona.role }}</p>
+            <dl class="persona-details">
+              <dt>Age</dt>
+              <dd>{{ persona.age }}</dd>
+              <dt>Tech Proficiency</dt>
+              <dd>{{ persona.tech_proficiency }}</dd>
+              <dt>Goals</dt>
+              <dd>{{ persona.goals }}</dd>
+              <dt>Pain Points</dt>
+              <dd>{{ persona.pain_points }}</dd>
+              <dt>Explanation</dt>
+              <dd>{{ persona.explanation }}</dd>
+            </dl>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+    <p class="results-status">Showing {{ personas | length }} personas.</p>
+  </section>
+
+  <!-- TEAM MEMBERS SECTION -->
+  <section class="section-block">
+    <div class="section-heading">
+      <p class="eyebrow">Retrieved from database</p>
+      <h2>Team members</h2>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Student Number</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for member in team_members %}
+            <tr>
+              <th scope="row">{{ member.name }}</th>
+              <td>{{ member.student_id }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="source-note">Data sourced from the <abbr title="World Health Organization">WHO</abbr> Global Immunisation Database, with personas and team records stored locally for the studio project.</p>
+  </section>
+{% endblock %}

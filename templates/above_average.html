@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}VaxTrack | Above Average Infection{% endblock %}
+
+{% block content %}
+  <!-- PAGE HEADER -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('landing.index') }}">Home</a>
+    <span>Deep Dive</span>
+    <span>Above Average Infection</span>
+  </nav>
+  <section class="page-intro">
+    <p class="eyebrow">Level 3 advanced analysis</p>
+    <h1>Countries Above Global Average Infection Rate</h1>
+    <p>Calculate the global average infection rate and identify countries exceeding it for a selected disease and year.</p>
+  </section>
+
+  <!-- HELP PANEL -->
+  <details class="help-box">
+    <summary class="help-trigger">How to use this page</summary>
+    <div class="help-content">
+      <p>Select an infection type and year. The first row shows the global average, followed by countries with higher country-level rates.</p>
+    </div>
+  </details>
+
+  <!-- FILTER PANEL -->
+  <section class="filter-panel">
+    <form class="filter-form" method="GET" action="{{ url_for('above_avg.above_average_infection') }}">
+      <div class="form-field">
+        <label for="year">Year</label>
+        <select id="year" name="year" required>
+          <option value="">Select year</option>
+          {% for year in years %}
+            <option value="{{ year }}" {{ "selected" if selected.year == year | string }}>{{ year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="disease">Infection Type</label>
+        <select id="disease" name="disease" required>
+          <option value="">Select infection</option>
+          {% for disease in diseases %}
+            <option value="{{ disease.code }}" {{ "selected" if selected.disease == disease.code }}>{{ disease.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Analyse</button>
+        <a class="btn btn-reset" href="{{ reset_url }}">Reset Filters</a>
+      </div>
+    </form>
+
+    {% if active_filters %}
+      <div class="active-filters">
+        <span class="filter-label">Active Filters:</span>
+        {% for key, value in active_filters.items() %}
+          <span class="chip">{{ key }}: {{ value }}</span>
+        {% endfor %}
+        <a href="{{ reset_url }}" class="chip chip-reset">Clear all</a>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- GLOBAL AVERAGE BANNER -->
+  {% if global_rate %}
+    <section class="global-banner">
+      <svg class="banner-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+      </svg>
+      <div>
+        <p class="eyebrow">Global average</p>
+        <strong>{{ rows[0].infection_type }} Rate ({{ selected.year }}): {{ rows[0].per_100k_display }} per 100,000 people</strong>
+      </div>
+    </section>
+  {% endif %}
+
+  <!-- RESULTS SECTION -->
+  <section class="section-block">
+    <div class="section-heading">
+      <p class="eyebrow">Results table</p>
+      <h2>Countries exceeding the average</h2>
+      <p class="results-status">Showing {{ results_count }} countries above the global average.</p>
+    </div>
+
+    {% if submitted and results_count == 0 %}
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+        <h3>No countries exceed the global average</h3>
+        <p>Try a different year or infection type.</p>
+        <a href="{{ reset_url }}" class="btn btn-reset">Reset Filters</a>
+      </div>
+    {% endif %}
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Country</th>
+            <th scope="col">Infection Type</th>
+            <th scope="col">Per 100,000</th>
+            <th scope="col">Year</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr class="{{ row.row_class }}">
+              <th scope="row">{{ row.country }}</th>
+              <td>{{ row.infection_type }}</td>
+              <td>
+                <span class="rate-bar {{ row.bar_class }}"></span>
+                <span>{{ row.per_100k_display }}</span>
+              </td>
+              <td>{{ row.year }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

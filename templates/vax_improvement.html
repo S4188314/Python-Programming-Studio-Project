@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}VaxTrack | Vaccination Improvement{% endblock %}
+
+{% block content %}
+  <!-- PAGE HEADER -->
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="{{ url_for('landing.index') }}">Home</a>
+    <span>Deep Dive</span>
+    <span>Vaccination Improvement</span>
+  </nav>
+  <section class="page-intro">
+    <p class="eyebrow">Level 3 advanced analysis</p>
+    <h1>Biggest Vaccination Rate Improvement</h1>
+    <p>Find countries with the largest increase in administered doses per 100 people between two selected years.</p>
+  </section>
+
+  <!-- HELP PANEL -->
+  <details class="help-box">
+    <summary class="help-trigger">How to use this page</summary>
+    <div class="help-content">
+      <p>Choose a start year, later end year, antigen, and result limit. The analysis compares vaccination rates between those years using a database common table expression.</p>
+    </div>
+  </details>
+
+  <!-- FILTER PANEL -->
+  <section class="filter-panel">
+    <form class="filter-form" method="GET" action="{{ url_for('improvement.vaccination_improvement') }}">
+      <div class="form-field">
+        <label for="start">Start Year</label>
+        <input id="start" type="number" name="start" min="{{ year_range[0] }}" max="{{ year_range[1] }}" value="{{ selected.start_year }}" required>
+      </div>
+      <div class="form-field">
+        <label for="end">End Year</label>
+        <input id="end" type="number" name="end" min="{{ year_range[0] }}" max="{{ year_range[1] }}" value="{{ selected.end_year }}" required>
+      </div>
+      <div class="form-field">
+        <label for="antigen">Antigen Type</label>
+        <select id="antigen" name="antigen" required>
+          <option value="">Select antigen</option>
+          {% for antigen in antigens %}
+            <option value="{{ antigen.code }}" {{ "selected" if selected.antigen == antigen.code }}>{{ antigen.code }} - {{ antigen.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="top">Show top N countries</label>
+        <input id="top" type="number" name="top" min="1" max="50" value="{{ selected.top_n }}" required>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Find Top Countries</button>
+        <a class="btn btn-reset" href="{{ reset_url }}">Reset Filters</a>
+      </div>
+    </form>
+
+    {% if active_filters %}
+      <div class="active-filters">
+        <span class="filter-label">Active Filters:</span>
+        {% for key, value in active_filters.items() %}
+          <span class="chip">{{ key }}: {{ value }}</span>
+        {% endfor %}
+        <a href="{{ reset_url }}" class="chip chip-reset">Clear all</a>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- RESULTS SECTION -->
+  <section class="section-block">
+    {% if results_count %}
+      <div class="result-banner">
+        Analysing {{ results_count }} countries from {{ selected.start_year }} to {{ selected.end_year }} for <abbr title="Selected antigen code">{{ selected.antigen }}</abbr>.
+      </div>
+    {% endif %}
+
+    {% if submitted and rows | length == 0 %}
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+        <h3>No improvement found</h3>
+        <p>Try a wider year range or another antigen.</p>
+        <a href="{{ reset_url }}" class="btn btn-reset">Reset Filters</a>
+      </div>
+    {% endif %}
+
+    <div class="section-heading">
+      <p class="eyebrow">Ranked results</p>
+      <h2>Progress by country</h2>
+      <p class="results-status">Showing {{ results_count }} results.</p>
+    </div>
+
+    <div class="ranked-list">
+      {% for row in rows %}
+        <article class="rank-card">
+          <span class="rank-medal {{ row.medal_class }}">{{ row.rank_label }}</span>
+          <div class="rank-body">
+            <div class="rank-title">
+              <strong>{{ row.country }}</strong>
+              <span class="{{ row.increase_class }}">{{ row.increase_display }}% {{ row.increase_label }}</span>
+            </div>
+            <div class="progress-track">
+              <span class="progress-bar {{ row.bar_class }}"></span>
+            </div>
+            <p>{{ row.start_year }}: {{ row.start_rate_display }}% to {{ row.end_year }}: {{ row.end_rate_display }}%</p>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+
+    <!-- TABLE VIEW -->
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Country</th>
+            <th scope="col">Start Rate %</th>
+            <th scope="col">End Rate %</th>
+            <th scope="col">Vaccination Rate Increase</th>
+            <th scope="col">Start Year</th>
+            <th scope="col">End Year</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              <th scope="row">{{ row.country }}</th>
+              <td>{{ row.start_rate_display }}%</td>
+              <td>{{ row.end_rate_display }}%</td>
+              <td class="{{ row.increase_class }}">{{ row.increase_display }}% <span>{{ row.increase_label }}</span></td>
+              <td>{{ row.start_year }}</td>
+              <td>{{ row.end_year }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}
